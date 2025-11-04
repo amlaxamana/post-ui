@@ -1,33 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import PostList from './PostList';
+import React from 'react';
 
-const API_URL = 'https://post-api-r9bw.onrender.com/posts'; // Assuming /posts is the endpoint
+function formatDate(d) {
+  if (!d) return '';
+  const dt = new Date(d);
+  return dt.toLocaleString();
+}
 
-export default function PostContainer() {
-  const [posts, setPosts] = useState([]);
-
-  useEffect(() => {
-    fetch(API_URL)
-      .then(res => res.json())
-      .then(data => setPosts(data))
-      .catch(error => console.error('Error fetching posts:', error));
-  }, []);
-
-  const handleEdit = (post) => {
-    // Logic to handle editing, e.g., navigating to an edit form
-    console.log('Editing post:', post.id);
-  };
-
-  const handleDelete = (postId) => {
-    // Logic to call the API's DELETE endpoint
-    fetch(`${API_URL}/${postId}`, { method: 'DELETE' })
-      .then(() => {
-        setPosts(posts.filter(post => post.id !== postId));
-      })
-      .catch(error => console.error('Error deleting post:', error));
-  };
+export default function PostList({ posts = [], onEdit, onDelete }) {
+  if (!posts.length) {
+    return <div className="card small-muted">No posts yet.</div>;
+  }
 
   return (
-    <PostList posts={posts} onEdit={handleEdit} onDelete={handleDelete} />
+    <>
+      {posts.map(post => (
+        <div className="card" key={post.id}>
+          <div className="post-meta">
+            <div>
+              <div className="post-author">{post.author}</div>
+              <div className="post-dates">
+                created: {formatDate(post.createdAt)} · modified: {formatDate(post.modifiedAt)}
+              </div>
+            </div>
+          </div>
+
+          <div className="post-content">{post.content}</div>
+
+          {post.imageUrl && (
+            // eslint-disable-next-line jsx-a11y/alt-text
+            <img src={post.imageUrl} className="post-image" />
+          )}
+
+          <div className="controls">
+            <button className="btn btn-primary" onClick={() => onEdit && onEdit(post)}>Edit</button>
+            <button className="btn btn-ghost" onClick={() => onDelete && onDelete(post.id)}>Delete</button>
+          </div>
+        </div>
+      ))}
+    </>
   );
 }

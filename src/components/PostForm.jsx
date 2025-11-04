@@ -1,57 +1,57 @@
 import React, { useState } from 'react';
-import PostForm from './PostForm'; // Assuming PostForm is in the same directory
 
-const API_BASE_URL = 'https://post-api-r9bw.onrender.com';
+export default function PostForm({ initial = {}, onSubmit, onCancel, submitLabel = 'Save' }) {
+  const [author, setAuthor] = useState(initial.author || '');
+  const [content, setContent] = useState(initial.content || '');
+  const [imageUrl, setImageUrl] = useState(initial.imageUrl || '');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
 
-export default function PostCreator({ onPostCreated }) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // The function passed to PostForm's onSubmit prop
-  const handleFormSubmit = async (formData) => {
-    setIsSubmitting(true);
-    
-    // Determine the action (Create vs. Update) and URL
-    const isNewPost = !formData.id;
-    const url = isNewPost ? `${API_BASE_URL}/posts` : `${API_BASE_URL}/posts/${formData.id}`;
-    const method = isNewPost ? 'POST' : 'PUT';
-
+  const handle = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (!author.trim()) {
+      setError('Author is required');
+      return;
+    }
+    setBusy(true);
     try {
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save post.');
+      await onSubmit({ author: author.trim(), content, imageUrl: imageUrl?.trim() || null });
+      if (!initial.id) {
+        setAuthor('');
+        setContent('');
+        setImageUrl('');
       }
-      
-      const savedPost = await response.json();
-      console.log(`${isNewPost ? 'Created' : 'Updated'} Post:`, savedPost);
-      
-      // Notify the main application of the new post
-      if (onPostCreated) {
-        onPostCreated(savedPost);
-      }
-
-    } catch (error) {
-      console.error('API Error:', error);
-      // Re-throw the error so PostForm can display it to the user
-      throw error; 
+    } catch (err) {
+      setError(err.message || 'Failed');
     } finally {
-      setIsSubmitting(false);
+      setBusy(false);
     }
   };
 
   return (
-    <div className="card">
-      <h3>Create New Post</h3>
-      {/* The PostForm's internal 'handle' function calls 'handleFormSubmit' 
-        which is where the API URL is used. 
-      */}
-      <PostForm onSubmit={handleFormSubmit} submitLabel="Publish Post" />
-    </div>
+    <form onSubmit={handle}>
+      <div className="form-row">
+        <label>Author</label>
+        <input type="text" value={author} onChange={e => setAuthor(e.target.value)} />
+      </div>
+
+      <div className="form-row">
+        <label>Content</label>
+        <textarea value={content} onChange={e => setContent(e.target.value)} />
+      </div>
+
+      <div className="form-row">
+        <label>Image URL (optional)</label>
+        <input type="text" value={imageUrl} onChange={e => setImageUrl(e.target.value)} />
+      </div>
+
+      {error && <div style={{color:'#b91c1c', marginBottom:8}}>{error}</div>}
+
+      <div style={{display:'flex', gap:8}}>
+        <button type="submit" disabled={busy} className="btn btn-primary">{busy ? 'Saving...' : submitLabel}</button>
+        {onCancel && <button type="button" onClick={onCancel} className="btn btn-ghost">Cancel</button>}
+      </div>
+    </form>
   );
 }
