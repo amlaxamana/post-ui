@@ -8,7 +8,7 @@ function formatDate(d) {
 
 export default function PostList({ posts = [], onEdit, onDelete }) {
   if (!posts.length) {
-    return <div className="card small-muted">No posts yet.</div>;
+    return <div className="card small-muted">No post yet.</div>;
   }
 
   return (
