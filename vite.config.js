@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://post-ui-p003.onrender.com',
+        target: 'https://post-api-r9bw.onrender.com',
         changeOrigin: true,
         secure: false
       }
